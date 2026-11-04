@@ -4,8 +4,8 @@
 
 | 形态 | 文件 | 适用场景 |
 | --- | --- | --- |
-| ① npm 包（.tgz） | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.0.tgz` | 最通用的离线分享：发文件、放网盘、挂静态服务器地址都行 |
-| ② git 仓库 | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.0.bundle` 或直接推 GitHub | 想让对方能看源码 / 能收到更新 |
+| ① npm 包（.tgz） | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.tgz` | 最通用的离线分享：发文件、放网盘、挂静态服务器地址都行 |
+| ② git 仓库 | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.bundle` 或直接推 GitHub | 想让对方能看源码 / 能收到更新 |
 | ③ 装好后直接给链接 | 无需文件 | 对方和你在同一台机器 / 同一个 profile |
 
 两个文件都不大（tgz 约 100 KB，bundle 约 100 KB），微信 / 邮件都能直接发。
@@ -14,11 +14,11 @@
 
 ## ① 用 .tgz 安装（推荐给「只想装上的人」）
 
-对方拿到 `dsh-thick-scrollbar-0.1.0.tgz` 后，两条路：
+对方拿到 `dsh-thick-scrollbar-0.1.1.tgz` 后，两条路：
 
 **A. 让 AI 装（最简单）** —— 在 DSH 里对 agent 说：
 
-> 装这个插件：`file:D:/path/to/dsh-thick-scrollbar-0.1.0.tgz`
+> 装这个插件：`file:D:/path/to/dsh-thick-scrollbar-0.1.1.tgz`
 
 （换成真实绝对路径；Windows 反斜杠也可以。）
 
@@ -29,7 +29,7 @@ agent 会调用 `plugin_manager install_bundle`，返回 `application: "applied"
 ```jsonc
 {
   "dependencies": {
-    "dsh-thick-scrollbar": "file:D:/path/to/dsh-thick-scrollbar-0.1.0.tgz"
+    "dsh-thick-scrollbar": "file:D:/path/to/dsh-thick-scrollbar-0.1.1.tgz"
   },
   "dsh": {
     "bundles": ["dsh-thick-scrollbar"]   // 加进已有列表，别覆盖
@@ -41,7 +41,7 @@ agent 会调用 `plugin_manager install_bundle`，返回 `application: "applied"
 
 **C. 有公网地址时（.tgz 挂在任何 http(s) 上）**
 
-> 装这个插件：`https://example.com/dsh-thick-scrollbar-0.1.0.tgz`
+> 装这个插件：`https://example.com/dsh-thick-scrollbar-0.1.1.tgz`
 
 注意：`install_bundle` 对 http(s) URL 只接受**结尾是 `.tgz` / `.tar.gz` 的 tarball**，或 git 仓库地址；普通网页地址会被拒绝（报 `a URL must point at a git repository or a tarball`）。
 
@@ -62,10 +62,10 @@ git push -u origin main
 
 `install_bundle` 支持的 git 形态：`github:owner/repo`、`gitlab:`、`bitbucket:`、`gist:`，以及完整的 `git+https://…` / `https://…git` 地址。
 
-**不推 GitHub 也想给对方源码** —— 用仓库外的单文件归档 `D:\deepseek\dist\dsh-thick-scrollbar-0.1.0.bundle`：
+**不推 GitHub 也想给对方源码** —— 用仓库外的单文件归档 `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.bundle`：
 
 ```bash
-git clone dsh-thick-scrollbar-0.1.0.bundle dsh-thick-scrollbar
+git clone dsh-thick-scrollbar-0.1.1.bundle dsh-thick-scrollbar
 ```
 
 它包含完整提交历史，不需要网络，大小只有几十 KB。
@@ -84,7 +84,7 @@ npm publish --access public
 
 发布后别人可以：
 
-> 装这个插件：`dsh-thick-scrollbar` （或 `dsh-thick-scrollbar@0.1.0` 锁版本）
+> 装这个插件：`dsh-thick-scrollbar` （或 `dsh-thick-scrollbar@0.1.1` 锁版本）
 
 再往后如果进了社区目录 `dsh-plugin-catalog`，就能在 DSH 的设置 → 插件市场里被搜到。
 

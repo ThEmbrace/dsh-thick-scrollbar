@@ -50,7 +50,7 @@ DSH Web GUI 的小插件：**滚动条默认保持原样（细条、低对比、
 # 从本地目录安装（开发态，改源码立即生效）
 plugin_manager install_bundle "link:<本目录绝对路径>"
 # 从分发包安装
-plugin_manager install_bundle "file:<dsh-thick-scrollbar-0.1.0.tgz 绝对路径>"
+plugin_manager install_bundle "file:<dsh-thick-scrollbar-0.1.1.tgz 绝对路径>"
 # 发布到 npm / GitHub 之后
 plugin_manager install_bundle "dsh-thick-scrollbar"
 plugin_manager install_bundle "github:<账号>/dsh-thick-scrollbar"

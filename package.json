@@ -1,6 +1,6 @@
 {
   "name": "dsh-thick-scrollbar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": false,
   "type": "module",
   "description": "滚动条悬停加粗：默认保持 dsh 原有的细条 / 半隐藏外观，鼠标移到滑块上时临时变粗，更好点击与拖拽，且加粗过程不引发任何重排。",
