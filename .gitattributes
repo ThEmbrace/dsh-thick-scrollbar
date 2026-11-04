@@ -1,2 +1,4 @@
 * text=auto eol=lf
 *.tgz binary
+# keep the screenshot binary-safe
+*.png binary
