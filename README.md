@@ -42,12 +42,20 @@ plugin_manager remove_bundle "dsh-thick-scrollbar"
 ## 测试
 
 ```bash
-node --test test/controller.test.mjs
+node --test test/*.test.mjs   # 必须是 glob；在 Windows 上 node --test test/ 会报 Cannot find module
 ```
 
-测试用最小 DOM stub 直接跑真实的 `lib/client.js`，覆盖：基线样式注入、正文中部不加粗、窄带内加粗且**不动槽宽变量**、离开后精确还原原内联值、无溢出容器不处理、滚轮保持、失焦 / 移出窗口 / 卸载清理。
+`test/controller.test.mjs` 用最小 DOM stub 直接跑真实的 `lib/client.js`，覆盖：基线样式注入、正文中部不加粗、窄带内加粗且**不动槽宽变量**、离开后精确还原原内联值、无溢出容器不处理、滚轮保持、失焦 / 移出窗口 / 卸载清理。
+`test/manifest.test.mjs` 按 `@deepseek-ai/dsh-client-modules` 的严格校验逐条核对 package.json，避免「看起来对、装上不生效」。
 
-`test/geometry.html` 是 headless Chromium 的几何探针，验证两件事：`html body` 基线能压过主题的 `body` 规则（即使插入更早），以及加粗前后槽宽与内容宽度完全一致（零重排）。
+两个几何 / 视觉探针（headless Chromium，`--dump-dom` 读数或 `--screenshot` 看图）：
+
+- `test/geometry.html`：验证 `html body` 基线能压过主题的 `body` 规则（即使插入更早），以及加粗前后槽宽与内容宽度完全一致（零重排）。
+- `test/visual.html`：四个面板并排对照静止 / 悬停（含 1.6× 放大），底部直接打印 `gutter / painted / content` 三组读数。
+
+## 分享给别人
+
+三条路径（tgz 包 / GitHub 仓库 / npm 发布），含各平台的安装命令、卸载与排错：见 [SHARE.md](./SHARE.md)。
 
 ## 边界
 
