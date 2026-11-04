@@ -4,15 +4,28 @@
 
 | 形态 | 文件 | 适用场景 |
 | --- | --- | --- |
-| ① npm 包（.tgz） | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.tgz` | 最通用的离线分享：发文件、放网盘、挂静态服务器地址都行 |
-| ② git 仓库 | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.bundle` 或直接推 GitHub | 想让对方能看源码 / 能收到更新 |
-| ③ 装好后直接给链接 | 无需文件 | 对方和你在同一台机器 / 同一个 profile |
+| ① 一键包（zip） | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1-kit.zip` | **最省事**：发一个文件，里面装着 tgz + git 归档 + 安装说明 |
+| ② npm 包（.tgz） | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.tgz` | 最通用的离线分享：发文件、放网盘、挂静态服务器地址都行 |
+| ③ git 仓库 | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.bundle` 或直接推 GitHub | 想让对方能看源码 / 能收到更新 |
+| ④ 装好后直接给链接 | 无需文件 | 对方和你在同一台机器 / 同一个 profile |
 
-两个文件都不大（tgz 约 100 KB，bundle 约 100 KB），微信 / 邮件都能直接发。
+三个文件都不大（zip 约 270 KB、tgz 约 86 KB、bundle 约 188 KB），微信 / 邮件都能直接发。
 
 ---
 
-## ① 用 .tgz 安装（推荐给「只想装上的人」）
+## ① 一键包（最省事）
+
+把 `dsh-thick-scrollbar-0.1.1-kit.zip` 发给对方，他解压后拿到三样东西：
+
+| 文件 | 用途 |
+| --- | --- |
+| `dsh-thick-scrollbar-0.1.1.tgz` | 装插件用这个 |
+| `dsh-thick-scrollbar-0.1.1.bundle` | 想看 / 改源码时用 |
+| `share-notes.txt` | 给不看仓库的人看的纯文本安装说明（含校验和与已知边界） |
+
+---
+
+## ② 用 .tgz 安装（推荐给「只想装上的人」）
 
 对方拿到 `dsh-thick-scrollbar-0.1.1.tgz` 后，两条路：
 
@@ -47,7 +60,7 @@ agent 会调用 `plugin_manager install_bundle`，返回 `application: "applied"
 
 ---
 
-## ② 用 git 安装
+## ③ 用 git 安装
 
 **直接推 GitHub（推荐）** —— 在这个目录执行：
 
@@ -72,7 +85,7 @@ git clone dsh-thick-scrollbar-0.1.1.bundle dsh-thick-scrollbar
 
 ---
 
-## ③ 发布成 npm 包（让别人 `dsh-thick-scrollbar` 一行装）
+## ④ 发布成 npm 包（让别人 `dsh-thick-scrollbar` 一行装）
 
 包名 `dsh-thick-scrollbar` 在 npm 上**目前未被占用**。发布流程（需要你自己的 npm 账号，本机没有登录态，我没有代发）：
 
