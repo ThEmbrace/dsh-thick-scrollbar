@@ -1,0 +1,43 @@
+{
+  "name": "dsh-thick-scrollbar",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "滚动条悬停加粗：默认保持 dsh 原有的细条 / 半隐藏外观，鼠标移到滑块上时临时变粗，更好点击与拖拽，且加粗过程不引发任何重排。",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "dsh-plugin",
+    "scrollbar",
+    "ui"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "pack:check": "node --check lib/client.js && node --check lib/index.js"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

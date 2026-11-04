@@ -1,0 +1,4 @@
+# dsh-thick-scrollbar：只注册一个纯样式 Client 插件，宿主侧没有任何行为。
+- insert:
+    - id: thick-scrollbar
+      name: dsh-thick-scrollbar
