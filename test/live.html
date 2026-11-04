@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>dsh-thick-scrollbar — live controller probe</title>
+    <style>
+      /* Verbatim copy of @deepseek-ai/dsh-client-ui-theme's scrollbar rules. */
+      body {
+        --dsh-scrollbar-thumb: #e5e5e5;
+        --dsh-scrollbar-thumb-hover: #d4d4d4;
+        --dsh-scrollbar-thumb-border: 0px;
+        --dsh-scrollbar-track-margin: 0px;
+        --dsh-scrollbar-width: 5px;
+      }
+      ::-webkit-scrollbar {
+        width: var(--dsh-scrollbar-width);
+        height: var(--dsh-scrollbar-width);
+      }
+      ::-webkit-scrollbar-track {
+        margin-block: var(--dsh-scrollbar-track-margin);
+        background: 0 0;
+      }
+      ::-webkit-scrollbar-thumb {
+        border: var(--dsh-scrollbar-thumb-border) solid transparent;
+        corner-shape: round;
+        background: var(--dsh-scrollbar-thumb);
+        background-clip: content-box;
+        border-radius: 999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--dsh-scrollbar-thumb-hover);
+      }
+      ::-webkit-scrollbar-corner {
+        background: 0 0;
+      }
+
+      body {
+        margin: 0;
+        padding: 24px;
+        font: 13px/1.4 system-ui, sans-serif;
+        background: #fff;
+        color: #222;
+      }
+      .outer {
+        width: 260px;
+        height: 220px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+      }
+      .inner {
+        width: 180px;
+        height: 90px;
+        overflow-y: auto;
+        border: 1px solid #bbb;
+        margin: 10px;
+      }
+      .filler {
+        height: 900px;
+        background: repeating-linear-gradient(#f4f4f4 0 24px, #ececec 24px 25px);
+      }
+      pre {
+        margin-top: 16px;
+        padding: 12px;
+        background: #f6f6f6;
+        border: 1px solid #ddd;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="outer" id="outer">
+      <div class="inner" id="inner"><div class="filler"></div></div>
+      <div class="filler"></div>
+    </div>
+
+    <pre id="out">running…</pre>
+
+    <script>
+      // The plugin's client bundle talks to the host through this global; a
+      // throwaway shim is enough to drive the real controller end to end.
+      window.__ModuleLoader__ = {
+        load({ id, factory }) {
+          window.__pluginId = id
+          window.__plugin = factory()
+        },
+      }
+      // Minimal ctx so `apply` can register (and later dispose) its effect.
+      window.__ctx = {
+        effect(setup) {
+          window.__dispose = setup()
+          return window.__dispose
+        },
+      }
+    </script>
+    <script src="../lib/client.js"></script>
+    <script>
+      const outer = document.getElementById('outer')
+      const inner = document.getElementById('inner')
+      const out = document.getElementById('out')
+
+      function thumb(sel) {
+        const el = document.querySelector(sel)
+        const cs = getComputedStyle(el)
+        const thumbStyle = getComputedStyle(el, '::-webkit-scrollbar-thumb')
+        const bw = parseFloat(thumbStyle.borderLeftWidth) || 0
+        return {
+          gutter: Math.round(
+            el.offsetWidth - el.clientWidth -
+              (parseFloat(cs.borderLeftWidth) || 0) - (parseFloat(cs.borderRightWidth) || 0),
+          ),
+          painted: Math.round((el.offsetWidth - el.clientWidth) - 2 * bw -
+              (parseFloat(cs.borderLeftWidth) || 0) - (parseFloat(cs.borderRightWidth) || 0)),
+          border: bw,
+          armed: el.hasAttribute('data-dsh-thick-scrollbar'),
+        }
+      }
+
+      function line(label) {
+        const o = thumb('#outer')
+        const i = thumb('#inner')
+        const width = getComputedStyle(document.body).getPropertyValue('--dsh-scrollbar-width').trim()
+        const content = outer.clientWidth
+        return (
+          `${label}: widthVar=${width} outer{gutter=${o.gutter} painted=${o.painted} ` +
+          `border=${o.border} armed=${o.armed} content=${content}} ` +
+          `inner{gutter=${i.gutter} painted=${i.painted} border=${i.border} armed=${i.armed}}`
+        )
+      }
+
+      const rows = []
+      function flush() {
+        out.textContent = rows.join('\n')
+      }
+      // Real pointer events at the coordinates a user's cursor would occupy.
+      function moveTo(x, y) {
+        outer.dispatchEvent(
+          new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true, composed: true }),
+        )
+        return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+      }
+
+      // The plugin listens on `window`, so the event must bubble that far.
+      async function run() {
+        try {
+          window.__plugin.apply(window.__ctx)
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+          rows.push(line('rest'))
+          flush()
+
+          const r = outer.getBoundingClientRect()
+          // 2px inside the right edge: within ARM_DISTANCE (gutter + 3).
+          await moveTo(r.right - 2, r.top + 40)
+          rows.push(line('armed via pointermove'))
+          flush()
+
+          // Off the gutter: 80px in from the right edge.
+          await moveTo(r.right - 80, r.top + 40)
+          rows.push(line('restored'))
+          flush()
+
+          // Arm again, then tear the plugin down mid-flight.
+          await moveTo(r.right - 2, r.top + 40)
+          rows.push(line('armed again'))
+          flush()
+          window.__dispose()
+          rows.push(line('after dispose'))
+          flush()
+
+          document.title = 'done'
+        } catch (error) {
+          rows.push('ERROR: ' + (error && error.stack ? error.stack : String(error)))
+          flush()
+          document.title = 'error'
+        }
+      }
+
+      run()
+    </script>
+  </body>
+</html>

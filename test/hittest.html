@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>dsh-thick-scrollbar · 拖动热区探针</title>
+<style>
+  /* 逐字复制 ui-theme 的滚动条几何：槽 10px，透明边框 2.5px → 可见滑块 5px。
+     目的：测「透明边框那一圈到底能不能按住拖动」。 */
+  html body {
+    --dsh-scrollbar-width: 10px;
+    --dsh-scrollbar-thumb-border: 2.5px;
+    --dsh-scrollbar-thumb: #8b5cf6;
+    --dsh-scrollbar-thumb-hover: #8b5cf6;
+    margin: 0;
+    padding: 24px;
+    font: 13px/1.5 system-ui, sans-serif;
+  }
+  ::-webkit-scrollbar { width: var(--dsh-scrollbar-width); height: var(--dsh-scrollbar-width); }
+  ::-webkit-scrollbar-track { background: 0 0; }
+  ::-webkit-scrollbar-thumb {
+    border: var(--dsh-scrollbar-thumb-border) solid transparent;
+    background: var(--dsh-scrollbar-thumb);
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  #box {
+    width: 200px;
+    height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    background: #fff;
+  }
+  #box > .tall { height: 2000px; background: linear-gradient(#f5f5f5, #e5e5e5); }
+</style>
+</head>
+<body>
+<div id="box"><div class="tall"></div></div>
+<pre id="out">measuring…</pre>
+<script>
+  const box = document.getElementById('box')
+  const r = box.getBoundingClientRect()
+  const bw =
+    (parseFloat(getComputedStyle(box).borderLeftWidth) || 0) +
+    (parseFloat(getComputedStyle(box).borderRightWidth) || 0)
+  // padding-box 右缘；滚动槽占据它左侧 width 像素
+  const right = r.right - (parseFloat(getComputedStyle(box).borderRightWidth) || 0)
+  const gutter = box.offsetWidth - box.clientWidth - bw
+  window.__probe = {
+    rect: { top: r.top, right: r.right, bottom: r.bottom, left: r.left },
+    right,
+    border,
+    gutter,
+    // 相对 viewport 的候选 x：外透明圈内侧 1px / 可见滑块中心 / 内透明圈 / 槽外
+    xs: {
+      outerBand: right - 1,
+      thumbCenter: right - gutter / 2,
+      innerBand: right - gutter + 2,
+      outside: right - gutter - 5,
+    },
+  }
+  document.getElementById('out').textContent =
+    `gutter=${gutter} right=${right.toFixed(1)} ` + JSON.stringify(window.__probe.xs)
+</script>
+</body>
+</html>

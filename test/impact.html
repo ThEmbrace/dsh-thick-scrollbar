@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>dsh-thick-scrollbar · 各表面代价探针</title>
+<style>
+  /* 逐字复制 ui-theme 的滚动条规则（含 @supports 分支） */
+  body {
+    --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l1);
+    --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l1);
+    --dsh-scrollbar-thumb-border: 0px;
+    --dsh-scrollbar-track-margin: 0px;
+    --dsh-scrollbar-width: 5px;
+    --dsw-alias-scrollbar-bg-l1: #8b5cf6;
+    --dsw-alias-scrollbar-hover-l1: #7c3aed;
+  }
+  ::-webkit-scrollbar { width: var(--dsh-scrollbar-width); height: var(--dsh-scrollbar-width); }
+  ::-webkit-scrollbar-track { margin-block: var(--dsh-scrollbar-track-margin); background: 0 0; }
+  ::-webkit-scrollbar-thumb {
+    border: var(--dsh-scrollbar-thumb-border) solid transparent;
+    background: var(--dsh-scrollbar-thumb);
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--dsh-scrollbar-thumb-hover); }
+
+  /* 主题原始值（未装插件时各表面的真实状态） */
+  .surface {
+    width: 200px; height: 160px; overflow-y: auto;
+    border: 1px solid #ddd; background: #fff; margin: 0 12px 12px 0;
+    display: inline-block; vertical-align: top;
+  }
+  .surface > .tall { height: 1200px; }
+  /* ui-input-trigger 菜单：元素级覆盖 width 6px / border 2px */
+  .menu { --dsh-scrollbar-width: 6px; --dsh-scrollbar-thumb-border: 2px; }
+  /* ui-schedule 详情：9px / 2px */
+  .schedule { --dsh-scrollbar-width: 9px; --dsh-scrollbar-thumb-border: 2px; }
+  /* ui-sidebar 的 quietBars：只把 thumb 绑成透明 */
+  .quiet { --dsh-scrollbar-thumb: transparent; --dsh-scrollbar-thumb-hover: transparent; }
+
+  /* 插件基线（html body 提高一级优先级） */
+  html body { --dsh-scrollbar-width: 10px; --dsh-scrollbar-thumb-border: 2.5px; }
+
+  pre { clear: both; padding: 12px; background: #111; color: #0f0; font: 12px/1.5 monospace; }
+</style>
+</head>
+<body>
+<div class="surface" data-case="plain"><div class="tall"></div></div>
+<div class="surface menu" data-case="menu"><div class="tall"></div></div>
+<div class="surface schedule" data-case="schedule"><div class="tall"></div></div>
+<div class="surface quiet" data-case="quiet"><div class="tall"></div></div>
+<pre id="out">measuring…</pre>
+<script>
+  // painted = gutter − 2×border；border 从计算样式读，gutter 从布局读（减掉面板 1px 边框）
+  function measure(el) {
+    const cs = getComputedStyle(el)
+    const bw =
+      (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0)
+    const gutter = el.offsetWidth - el.clientWidth - bw
+    const border = parseFloat(cs.getPropertyValue('--dsh-scrollbar-thumb-border')) || 0
+    return { gutter, border, painted: gutter - 2 * border, content: el.clientWidth }
+  }
+  function run() {
+    const rows = []
+    for (const el of document.querySelectorAll('.surface')) {
+      const rest = measure(el)
+      const saved = el.style.cssText
+      // 插件在悬停时做的事情：只写 thumb-border = 0px
+      el.style.setProperty('--dsh-scrollbar-thumb-border', '0px')
+      const armed = measure(el)
+      el.style.cssText = saved
+      const back = measure(el)
+      rows.push(
+        `${el.dataset.case.padEnd(9)} rest[gutter=${rest.gutter} painted=${rest.painted} content=${rest.content}]` +
+        ` armed[gutter=${armed.gutter} painted=${armed.painted} content=${armed.content}]` +
+        ` restored[painted=${back.painted}]`
+      )
+    }
+    return rows.join('\n')
+  }
+  document.getElementById('out').textContent = run()
+</script>
+</body>
+</html>

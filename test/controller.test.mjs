@@ -216,11 +216,11 @@ test('arming thickens the painted thumb without changing the layout width', asyn
   // The reserved gutter must stay exactly as it was: changing the scrollbar
   // width reflows the content beside it and the whole view jumps sideways.
   assert.equal(scroller.props.get('--dsh-scrollbar-width'), undefined)
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
+  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
   assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 })
 
-test('leaving the gutter restores the previous inline value exactly', async () => {
+test('leaving the gutter clears the marker and leaves no inline writes', async () => {
   const harness = createHarness()
   await loadClient(harness)
   harness.apply()
@@ -228,12 +228,13 @@ test('leaving the gutter restores the previous inline value exactly', async () =
   const scroller = makeElement({ inline: { '--dsh-scrollbar-thumb-border': '2px' } })
   harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 
   harness.emit('pointermove', harness.pointer(300, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '2px')
   assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), undefined)
+  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '2px')
+  assert.equal(scroller.props.get('--dsh-scrollbar-width'), undefined)
 })
 
 test('a scroller with no overflow is never armed', async () => {
@@ -256,10 +257,10 @@ test('blur drops the armed state', async () => {
   const scroller = makeElement()
   harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 
   harness.emit('blur', {})
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), undefined)
 })
 
 test('scrolling with the wheel keeps the bar the pointer is on', async () => {
@@ -270,13 +271,12 @@ test('scrolling with the wheel keeps the bar the pointer is on', async () => {
   const scroller = makeElement()
   harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 
   // Wheel-scrolling reflows the content under a still pointer: the bar must
   // stay thick instead of snapping back while the cursor is on the gutter.
   harness.emit('wheel', {})
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
   assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 })
 
@@ -288,7 +288,7 @@ test('dispose restores the element and detaches listeners', async () => {
   const scroller = makeElement()
   harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 
   dispose()
   assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
@@ -298,7 +298,7 @@ test('dispose restores the element and detaches listeners', async () => {
   harness.window.__ModuleLoader__ = { load() {} }
   harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), undefined)
 })
 
 test('leaving the viewport drops the armed state', async () => {
@@ -309,16 +309,16 @@ test('leaving the viewport drops the armed state', async () => {
   const scroller = makeElement()
   harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 
   // The cursor can leave the window without producing another pointermove, so
   // the widened bar would otherwise stay thick while the pointer is outside.
   harness.emitDoc('pointerleave', {})
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
   assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), undefined)
+  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
 })
 
-test('a second apply on the same window does not leak a 10px value', async () => {
+test('a second apply on the same window does not stack controllers', async () => {
   const harness = createHarness()
   await loadClient(harness)
   const first = harness.apply()
@@ -327,7 +327,7 @@ test('a second apply on the same window does not leak a 10px value', async () =>
   const scroller = makeElement()
   harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
   harness.flush()
-  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '0px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
 
   // A hot-reload style double mount must not let the last restore write the
   // widened value back as a permanent inline override.
@@ -336,4 +336,53 @@ test('a second apply on the same window does not leak a 10px value', async () =>
   assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
   assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), undefined)
   assert.equal(harness.document.head.children.length, 0, 'no baseline stylesheet is left behind')
+})
+
+test('arming never writes the inherited custom property', async () => {
+  const harness = createHarness()
+  await loadClient(harness)
+  harness.apply()
+
+  const scroller = makeElement()
+  harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
+  harness.flush()
+
+  // `--dsh-scrollbar-thumb-border` inherits, so writing it on the hovered
+  // container also fattens every nested scroller inside it. Arming must mark
+  // the element instead and let a scoped stylesheet rule do the painting.
+  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), undefined)
+  assert.equal(scroller.props.get('--dsh-scrollbar-width'), undefined)
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
+})
+
+test('the armed marker is scoped to that one element in CSS', async () => {
+  const harness = createHarness()
+  await loadClient(harness)
+  harness.apply()
+
+  const css = harness.document.head.children[0].textContent
+  assert.match(
+    css,
+    /\[data-dsh-thick-scrollbar\]::-webkit-scrollbar-thumb\s*\{[^}]*border-width:\s*0/,
+    'the armed rule must target the pseudo-element of the marked element only',
+  )
+})
+
+test('an element with its own inline border keeps it while armed and after', async () => {
+  const harness = createHarness()
+  await loadClient(harness)
+  harness.apply()
+
+  const scroller = makeElement({ inline: { '--dsh-scrollbar-thumb-border': '2px' } })
+  harness.emit('pointermove', harness.pointer(795, 300, [scroller]))
+  harness.flush()
+  // The stylesheet overrides the painted border; the inline value is not ours
+  // to rewrite, so it must survive untouched in both directions.
+  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '2px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), '')
+
+  harness.emit('pointermove', harness.pointer(300, 300, [scroller]))
+  harness.flush()
+  assert.equal(scroller.props.get('--dsh-scrollbar-thumb-border'), '2px')
+  assert.equal(scroller.attrs.get('data-dsh-thick-scrollbar'), undefined)
 })

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>dsh-thick-scrollbar · 嵌套与热区探针</title>
+<style>
+  body {
+    --dsh-scrollbar-thumb: #8b5cf6;
+    --dsh-scrollbar-thumb-hover: #7c3aed;
+    --dsh-scrollbar-thumb-border: 0px;
+    --dsh-scrollbar-track-margin: 0px;
+    --dsh-scrollbar-width: 5px;
+    margin: 0; padding: 20px; font: 13px/1.5 system-ui, sans-serif;
+  }
+  ::-webkit-scrollbar { width: var(--dsh-scrollbar-width); height: var(--dsh-scrollbar-width); }
+  ::-webkit-scrollbar-track { margin-block: var(--dsh-scrollbar-track-margin); background: 0 0; }
+  ::-webkit-scrollbar-thumb {
+    border: var(--dsh-scrollbar-thumb-border) solid transparent;
+    background: var(--dsh-scrollbar-thumb);
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  /* 插件基线 */
+  html body { --dsh-scrollbar-width: 10px; --dsh-scrollbar-thumb-border: 2.5px; }
+
+  .outer { width: 260px; height: 220px; overflow-y: auto; border: 1px solid #ccc; }
+  .outer > .filler { height: 900px; background: #fafafa; }
+  .inner { width: 200px; height: 90px; overflow-y: auto; border: 1px solid #bbb; margin: 8px; }
+  .inner > .filler { height: 400px; background: #eef; }
+  pre { padding: 12px; background: #111; color: #0f0; font: 12px/1.45 monospace; }
+</style>
+</head>
+<body>
+<div class="outer" id="outer">
+  <div class="inner" id="inner"><div class="filler"></div></div>
+  <div class="filler"></div>
+</div>
+<pre id="out">measuring…</pre>
+<script>
+  const outer = document.getElementById('outer')
+  const inner = document.getElementById('inner')
+  function measure(el) {
+    const cs = getComputedStyle(el)
+    const bw = (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0)
+    const gutter = el.offsetWidth - el.clientWidth - bw
+    const border = parseFloat(cs.getPropertyValue('--dsh-scrollbar-thumb-border')) || 0
+    const width = parseFloat(cs.getPropertyValue('--dsh-scrollbar-width')) || 0
+    return { gutter, width, border, painted: gutter - 2 * border }
+  }
+  const f = (m) => `gutter=${m.gutter} width=${m.width} border=${m.border} painted=${m.painted}`
+  const rows = []
+  rows.push('outer rest        ' + f(measure(outer)))
+  rows.push('inner rest        ' + f(measure(inner)))
+  // 插件 arm 外层时做的唯一写入
+  outer.style.setProperty('--dsh-scrollbar-thumb-border', '0px')
+  rows.push('outer armed       ' + f(measure(outer)))
+  rows.push('inner under armed ' + f(measure(inner)) + '   <-- 内层是否被遗传')
+  outer.style.removeProperty('--dsh-scrollbar-thumb-border')
+  rows.push('inner restored    ' + f(measure(inner)))
+  document.getElementById('out').textContent = rows.join('\n')
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>属性式加粗 + 成本探针</title>
+<style>
+  body { --dsh-scrollbar-thumb: #8b5cf6; --dsh-scrollbar-thumb-hover: #7c3aed;
+         --dsh-scrollbar-thumb-border: 0px; --dsh-scrollbar-track-margin: 0px;
+         --dsh-scrollbar-width: 5px; margin: 0; padding: 20px; }
+  ::-webkit-scrollbar { width: var(--dsh-scrollbar-width); height: var(--dsh-scrollbar-width); }
+  ::-webkit-scrollbar-track { margin-block: var(--dsh-scrollbar-track-margin); background: 0 0; }
+  ::-webkit-scrollbar-thumb {
+    border: var(--dsh-scrollbar-thumb-border) solid transparent;
+    background: var(--dsh-scrollbar-thumb); background-clip: content-box; border-radius: 999px;
+  }
+  /* 插件基线 */
+  html body { --dsh-scrollbar-width: 10px; --dsh-scrollbar-thumb-border: 2.5px; }
+  /* 候选：属性式加粗 —— 只命中带属性的那个元素自己的滑块，不向下继承 */
+  html body [data-arm-probe]::-webkit-scrollbar-thumb { border-width: 0px; }
+
+  .outer { width: 260px; height: 200px; overflow-y: auto; border: 1px solid #ccc; }
+  .inner { width: 200px; height: 80px; overflow-y: auto; border: 1px solid #bbb; margin: 8px; }
+  .filler { height: 800px; }
+  .deep { height: 900px; }
+  pre { padding: 12px; background: #111; color: #0f0; font: 12px/1.45 monospace; }
+</style>
+</head>
+<body>
+<div class="outer" id="outer">
+  <div class="inner" id="inner"><div class="filler"></div></div>
+  <div class="filler"></div>
+</div>
+<div class="deep" id="deep"><span id="leaf">leaf</span></div>
+<pre id="out">measuring…</pre>
+<script>
+  function m(el) {
+    const cs = getComputedStyle(el)
+    const bw = (parseFloat(cs.borderLeftWidth) || 0) + (parseFloat(cs.borderRightWidth) || 0)
+    const gutter = el.offsetWidth - el.clientWidth - bw
+    const border = parseFloat(cs.getPropertyValue('--dsh-scrollbar-thumb-border')) || 0
+    return `gutter=${gutter} border=${border} painted=${gutter - 2 * border}`
+  }
+  const outer = document.getElementById('outer')
+  const inner = document.getElementById('inner')
+  const rows = []
+  rows.push('outer rest          ' + m(outer))
+  rows.push('inner rest          ' + m(inner))
+  outer.setAttribute('data-arm-probe', '')
+  rows.push('outer armed(attr)   ' + m(outer))
+  rows.push('inner under armed   ' + m(inner) + '   <-- 期望仍为 5px')
+  outer.removeAttribute('data-arm-probe')
+  rows.push('outer restored      ' + m(outer))
+
+  // 内联写法对照（当前实现）
+  outer.style.setProperty('--dsh-scrollbar-thumb-border', '0px')
+  rows.push('outer armed(inline) ' + m(outer))
+  rows.push('inner under inline  ' + m(inner) + '   <-- 已知：会一起变粗')
+  outer.style.removeProperty('--dsh-scrollbar-thumb-border')
+
+  // 成本：每帧对路径上元素做 getComputedStyle + scrollHeight 读取
+  const t0 = performance.now()
+  let sink = 0
+  for (let i = 0; i < 2000; i++) {
+    const cs = getComputedStyle(inner)
+    sink += cs.overflowY === 'auto' ? 1 : 0
+    sink += inner.scrollHeight - inner.clientHeight
+  }
+  const per = (performance.now() - t0) / 2000
+  rows.push(`per-move probe cost  ${per.toFixed(4)} ms  (sink=${sink})`)
+
+  document.getElementById('out').textContent = rows.join('\n')
+</script>
+</body>
+</html>

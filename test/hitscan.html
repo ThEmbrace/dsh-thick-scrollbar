@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>热区扫描</title>
+<style>
+  body { --dsh-scrollbar-thumb: #8b5cf6; --dsh-scrollbar-thumb-hover: #7c3aed;
+         --dsh-scrollbar-thumb-border: 0px; --dsh-scrollbar-track-margin: 0px;
+         --dsh-scrollbar-width: 5px; margin: 0; padding: 20px; }
+  ::-webkit-scrollbar { width: var(--dsh-scrollbar-width); height: var(--dsh-scrollbar-width); }
+  ::-webkit-scrollbar-track { margin-block: var(--dsh-scrollbar-track-margin); background: 0 0; }
+  ::-webkit-scrollbar-thumb {
+    border: var(--dsh-scrollbar-thumb-border) solid transparent;
+    background: var(--dsh-scrollbar-thumb); background-clip: content-box; border-radius: 999px;
+  }
+  .box { width: 200px; height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #fff;
+         position: absolute; top: 40px; }
+  #c1 { left: 20px; }   /* 主题原始：gutter 5, border 0 */
+  #c2 { left: 260px; }  /* 插件静止：gutter 10, border 2.5 */
+  #c3 { left: 500px; }  /* 插件悬停：gutter 10, border 0 */
+  #c1 { --dsh-scrollbar-width: 5px; --dsh-scrollbar-thumb-border: 0px; }
+  #c2 { --dsh-scrollbar-width: 10px; --dsh-scrollbar-thumb-border: 2.5px; }
+  #c3 { --dsh-scrollbar-width: 10px; --dsh-scrollbar-thumb-border: 0px; }
+  .tall { height: 2000px; }
+</style>
+</head>
+<body>
+<div class="box" id="c1"><div class="tall"></div></div>
+<div class="box" id="c2"><div class="tall"></div></div>
+<div class="box" id="c3"><div class="tall"></div></div>
+<script>
+  window.__cases = {}
+  for (const id of ['c1', 'c2', 'c3']) {
+    const el = document.getElementById(id)
+    const cs = getComputedStyle(el)
+    const r = el.getBoundingClientRect()
+    const br = parseFloat(cs.borderRightWidth) || 0
+    const bw = br + (parseFloat(cs.borderLeftWidth) || 0)
+    const gutter = el.offsetWidth - el.clientWidth - bw
+    const border = parseFloat(cs.getPropertyValue('--dsh-scrollbar-thumb-border')) || 0
+    window.__cases[id] = {
+      right: r.right - br,
+      top: r.top,
+      gutter,
+      border,
+      painted: gutter - 2 * border,
+    }
+  }
+</script>
+</body>
+</html>

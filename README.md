@@ -2,16 +2,26 @@
 
 DSH Web GUI 的小插件：**滚动条默认保持原样（细条、低对比、该隐藏的地方照样隐藏），只有鼠标移到滚动槽附近时临时加粗到 10px**，离开立刻恢复；**加粗过程不改变滚动槽宽度，正文不会横向抖动或位移**。
 
-![静止 5px ↔ 悬停 10px 对照](docs/preview.png)
+![静止 6px ↔ 悬停 10px 对照](docs/preview.png)
 
-（左两张 1:1 —— 静止态绘制 5px、悬停态 10px，滚动槽与内容盒宽度完全一致；右两张 1.6× 放大。）
+（左两张 1:1 —— 静止态绘制 6px、悬停态 10px，滚动槽与内容盒宽度完全一致；右两张 1.6× 放大。）
 
 ## 行为
 
-- 基线（插件一加载就注入）：`html body` 上把 `--dsh-scrollbar-width` 定为 10px、`--dsh-scrollbar-thumb-border` 定为 2.5px。透明边框把「绘制的滑块」内缩回 5px（10 − 2×2.5），所以**看起来和原来一样细**，但滚动槽已永久预留 10px 的布局空间。
-- 指针进入容器右边缘 13px 窄带（`ARM_DISTANCE`）：只把该容器的 `--dsh-scrollbar-thumb-border` 写成 0px —— 透明边框消失，滑块原地从 5px 画成 10px。槽宽不变，所以**周围内容一格都不移动**。
-- 指针离开窄带超过 21px（`DISARM_DISTANCE`，留 8px 迟滞防抖动）：精确还原容器原本的内联值（若原本没有内联值就整条移除）。
+- 基线（插件一加载就注入）：`html body` 上把 `--dsh-scrollbar-width` 定为 10px、`--dsh-scrollbar-thumb-border` 定为 2.5px。透明边框把「绘制的滑块」内缩回去，所以**看起来和原来一样细**，但滚动槽已永久预留 10px 的布局空间。
+- 指针进入容器右边缘 13px 窄带（`ARM_DISTANCE`）：只给该容器加一个标记属性 `data-dsh-thick-scrollbar`，由作用域规则 `html body [data-dsh-thick-scrollbar]::-webkit-scrollbar-thumb { border-width: 0 }` 把透明边框清零 —— 滑块原地从细条画成 10px。槽宽不变，所以**周围内容一格都不移动**。
+- 指针离开窄带超过 21px（`DISARM_DISTANCE`，留 8px 迟滞防抖动）：删掉该属性。插件**从不写内联样式**，所以没有任何「恢复原值」的风险。
 - 滚轮滚动时不改变状态：容器不会因为滚动而位移，鼠标还压在滚动槽上就应当保持粗条。
+
+### 实测宽度（headless Chromium，DPR 1 与 2 逐像素数过）
+
+| 状态 | 滚动槽 | 实际绘制滑块 |
+| --- | --- | --- |
+| ui-theme 原始 | 5px | 5px |
+| 插件静止 | 10px | 6px |
+| 插件悬停 | 10px | 10px |
+
+静止态是 6px 而不是 5px，因为 Chromium 在绘制滚动条伪元素时把 `border-width` 向下取整到整数 CSS 像素：2.5px → 2px，于是 `10 − 2×2 = 6`。想要静止态严格 5px 就需要「槽 9px + 边框 2px」，代价是悬停只能到 9px；这里选择保住用户要的 10px 悬停宽度，静止态多 1px。
 
 ## 为什么早期版本会抖
 
@@ -56,13 +66,25 @@ plugin_manager remove_bundle "dsh-thick-scrollbar"
 node --test test/*.test.mjs   # 必须是 glob；在 Windows 上 node --test test/ 会报 Cannot find module
 ```
 
-`test/controller.test.mjs` 用最小 DOM stub 直接跑真实的 `lib/client.js`，覆盖：基线样式注入、正文中部不加粗、窄带内加粗且**不动槽宽变量**、离开后精确还原原内联值、无溢出容器不处理、滚轮保持、失焦 / 移出窗口 / 卸载清理。
+`test/controller.test.mjs` 用最小 DOM stub 直接跑真实的 `lib/client.js`，覆盖：基线样式注入、正文中部不加粗、窄带内加粗且**只加标记属性、不写任何内联样式**、离开后清除标记、标记不向下继承（子滚动容器不被带着变粗）、无溢出容器不处理、滚轮保持、失焦 / 移出窗口 / 卸载清理。
 `test/manifest.test.mjs` 按 `@deepseek-ai/dsh-client-modules` 的严格校验逐条核对 package.json，避免「看起来对、装上不生效」。
 
 两个几何 / 视觉探针（headless Chromium，`--dump-dom` 读数或 `--screenshot` 看图）：
 
 - `test/geometry.html`：验证 `html body` 基线能压过主题的 `body` 规则（即使插入更早），以及加粗前后槽宽与内容宽度完全一致（零重排）。
 - `test/visual.html`：四个面板并排对照静止 / 悬停（含 1.6× 放大），底部直接打印 `gutter / painted / content` 三组读数。
+
+`test/live.html` 更进一步：它用 `window.__ModuleLoader__` / `window.__ctx` 两个 shim **直接加载真实的 `lib/client.js`**（不是复刻规则），再用 CDP 派发真实指针事件，验证 rest → armed → restored → dispose 全链路，以及嵌套容器不被遗传。
+
+以下探针是评测「这项优化到底有没有用」时留下的证据页，可离线打开：
+
+| 页面 | 回答的问题 |
+| --- | --- |
+| `test/hittest.html` | 单个容器的拖动热区有多宽 |
+| `test/hitscan.html` | 主题原始 / 插件静止 / 插件悬停 三种配置的热区逐像素对比 |
+| `test/nested.html` | 外层加粗时内层滚动条会不会被连带加粗 |
+| `test/impact.html` | 各界面表面（普通容器 / 菜单 / 计划页 / 安静侧栏）的槽宽与绘制宽度代价 |
+| `test/armrule.html` | 属性式加粗 vs 内联变量式加粗的对照，以及每次 pointermove 的探测耗时 |
 
 ## 分享给别人
 
@@ -72,5 +94,7 @@ node --test test/*.test.mjs   # 必须是 glob；在 Windows 上 node --test tes
 
 - 只处理纵向可滚动容器（`overflow-y: auto|scroll|overlay` 且 `scrollHeight > clientHeight`）。
 - 会永久预留 10px 滚动槽（相比主题默认 5px，正文窄 5px），这是「悬停零重排」的代价；`scrollbar-gutter: stable` 的面板同样按 10px 预留。
+- **自己重绑了槽宽的表面不受影响**：`ui-input-trigger` 的菜单把槽宽定成 6px、`ui-schedule` 定成 9px（元素级 class 选择器，优先级高于插件基线），这些地方静止态保持原来的细条，悬停时也只到 6px / 9px，不是 10px。这是有意的：不覆盖各组件自己的几何决策。
+- 加粗是**瞬时**的：Chromium 不为 `::-webkit-scrollbar` 伪元素执行 `transition`，没有渐变动画。
 - 不处理 Firefox 的 `@supports not selector(::-webkit-scrollbar)` 分支（桌面端是 Chromium）。
 - 不改主题 token、不改 asar、不引入运行时依赖。
