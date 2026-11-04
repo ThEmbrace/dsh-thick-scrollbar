@@ -4,9 +4,9 @@
 
 | 形态 | 文件 | 适用场景 |
 | --- | --- | --- |
-| ① 一键包（zip） | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1-kit.zip` | **最省事**：发一个文件，里面装着 tgz + git 归档 + 安装说明 |
-| ② npm 包（.tgz） | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.tgz` | 最通用的离线分享：发文件、放网盘、挂静态服务器地址都行 |
-| ③ git 仓库 | `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.bundle` 或直接推 GitHub | 想让对方能看源码 / 能收到更新 |
+| ① 一键包（zip） | `dsh-thick-scrollbar-0.1.1-kit.zip` | **最省事**：发一个文件，里面装着 tgz + git 归档 + 安装说明 |
+| ② npm 包（.tgz） | `dsh-thick-scrollbar-0.1.1.tgz` | 最通用的离线分享：发文件、放网盘、挂静态服务器地址都行 |
+| ③ git 仓库 | `dsh-thick-scrollbar-0.1.1.bundle` 或直接推 GitHub | 想让对方能看源码 / 能收到更新 |
 | ④ 装好后直接给链接 | 无需文件 | 对方和你在同一台机器 / 同一个 profile |
 
 三个文件都不大（zip 约 270 KB、tgz 约 86 KB、bundle 约 188 KB），微信 / 邮件都能直接发。
@@ -75,7 +75,7 @@ git push -u origin main
 
 `install_bundle` 支持的 git 形态：`github:owner/repo`、`gitlab:`、`bitbucket:`、`gist:`，以及完整的 `git+https://…` / `https://…git` 地址。
 
-**不推 GitHub 也想给对方源码** —— 用仓库外的单文件归档 `D:\deepseek\dist\dsh-thick-scrollbar-0.1.1.bundle`：
+**不推 GitHub 也想给对方源码** —— 用仓库外的单文件归档 `dsh-thick-scrollbar-0.1.1.bundle`：
 
 ```bash
 git clone dsh-thick-scrollbar-0.1.1.bundle dsh-thick-scrollbar
@@ -90,7 +90,7 @@ git clone dsh-thick-scrollbar-0.1.1.bundle dsh-thick-scrollbar
 包名 `dsh-thick-scrollbar` 在 npm 上**目前未被占用**。发布流程（需要你自己的 npm 账号，本机没有登录态，我没有代发）：
 
 ```bash
-cd D:/deepseek/dsh-thick-scrollbar
+cd dsh-thick-scrollbar
 npm login                 # 或用 NPM_TOKEN 环境变量
 npm publish --access public
 ```
